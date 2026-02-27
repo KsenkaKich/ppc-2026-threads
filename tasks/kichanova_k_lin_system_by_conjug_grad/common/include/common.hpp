@@ -13,7 +13,7 @@ struct LinSystemData {
   std::vector<double> x;
   int n;
   double epsilon;
-  
+
   LinSystemData() : n(0), epsilon(1e-10) {}
 };
 
