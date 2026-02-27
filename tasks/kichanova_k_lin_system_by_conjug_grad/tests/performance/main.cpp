@@ -1,5 +1,8 @@
 #include <gtest/gtest.h>
 
+#include <cmath>
+#include <cstddef>
+
 #include "kichanova_k_lin_system_by_conjug_grad/common/include/common.hpp"
 #include "kichanova_k_lin_system_by_conjug_grad/seq/include/ops_seq.hpp"
 #include "util/include/perf_test_util.hpp"
@@ -14,17 +17,21 @@ class KichanovaKRunPerfTestsThreads : public ppc::util::BaseRunPerfTests<InType,
     LinSystemData data;
     data.n = kCount_;
     data.epsilon = 1e-8;
-    data.A.assign(data.n * data.n, 0.0);
+    data.A.assign(static_cast<size_t>(data.n) * data.n, 0.0);
+    const size_t stride = static_cast<size_t>(data.n);
     for (int i = 0; i < data.n; ++i) {
-      data.A[i * data.n + i] = 4.0;
+      const size_t diag_pos = static_cast<size_t>(i) * stride + i;
+      data.A[diag_pos] = 4.0;
       if (i > 0) {
-        data.A[i * data.n + (i - 1)] = -1.0;
+        const size_t left_pos = static_cast<size_t>(i) * stride + (i - 1);
+        data.A[left_pos] = -1.0;
       }
       if (i < data.n - 1) {
-        data.A[i * data.n + (i + 1)] = -1.0;
+        const size_t right_pos = static_cast<size_t>(i) * stride + (i + 1);
+        data.A[right_pos] = -1.0;
       }
     }
-    data.b.resize(data.n);
+    data.b.resize(static_cast<size_t>(data.n));
     for (int i = 0; i < data.n; ++i) {
       data.b[i] = 1.0;
     }
@@ -38,10 +45,12 @@ class KichanovaKRunPerfTestsThreads : public ppc::util::BaseRunPerfTests<InType,
     }
 
     double residual_norm = 0.0;
+    const size_t stride = static_cast<size_t>(input_data_.n);
     for (int i = 0; i < input_data_.n; ++i) {
       double sum = 0.0;
       for (int j = 0; j < input_data_.n; ++j) {
-        sum += input_data_.A[i * input_data_.n + j] * output_data[j];
+        const size_t pos = static_cast<size_t>(i) * stride + j;
+        sum += input_data_.A[pos] * output_data[j];
       }
       double diff = sum - input_data_.b[i];
       residual_norm += diff * diff;
