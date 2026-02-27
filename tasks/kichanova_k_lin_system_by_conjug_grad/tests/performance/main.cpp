@@ -18,16 +18,16 @@ class KichanovaKRunPerfTestsThreads : public ppc::util::BaseRunPerfTests<InType,
     data.n = kCount_;
     data.epsilon = 1e-8;
     data.A.assign(static_cast<size_t>(data.n) * data.n, 0.0);
-    const size_t stride = static_cast<size_t>(data.n);
+    const auto stride = static_cast<size_t>(data.n);
     for (int i = 0; i < data.n; ++i) {
-      const size_t diag_pos = static_cast<size_t>(i) * stride + i;
+      const size_t diag_pos = (static_cast<size_t>(i) * stride) + i;
       data.A[diag_pos] = 4.0;
       if (i > 0) {
-        const size_t left_pos = static_cast<size_t>(i) * stride + (i - 1);
+        const size_t left_pos = (static_cast<size_t>(i) * stride) + (i - 1);
         data.A[left_pos] = -1.0;
       }
       if (i < data.n - 1) {
-        const size_t right_pos = static_cast<size_t>(i) * stride + (i + 1);
+        const size_t right_pos = (static_cast<size_t>(i) * stride) + (i + 1);
         data.A[right_pos] = -1.0;
       }
     }
@@ -45,11 +45,11 @@ class KichanovaKRunPerfTestsThreads : public ppc::util::BaseRunPerfTests<InType,
     }
 
     double residual_norm = 0.0;
-    const size_t stride = static_cast<size_t>(input_data_.n);
+    const auto stride = static_cast<size_t>(input_data_.n);
     for (int i = 0; i < input_data_.n; ++i) {
       double sum = 0.0;
       for (int j = 0; j < input_data_.n; ++j) {
-        const size_t pos = static_cast<size_t>(i) * stride + j;
+        const size_t pos = (static_cast<size_t>(i) * stride) + j;
         sum += input_data_.A[pos] * output_data[j];
       }
       double diff = sum - input_data_.b[i];

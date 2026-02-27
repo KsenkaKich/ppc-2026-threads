@@ -17,12 +17,12 @@ double ComputeDotProduct(const std::vector<double> &a, const std::vector<double>
   return result;
 }
 
-void ComputeMatrixVectorProduct(const std::vector<double> &A, const std::vector<double> &v, std::vector<double> &result,
+void ComputeMatrixVectorProduct(const std::vector<double> &a, const std::vector<double> &v, std::vector<double> &result,
                                 int n) {
-  const size_t stride = static_cast<size_t>(n);
+  const auto stride = static_cast<size_t>(n);
   for (int i = 0; i < n; ++i) {
     double sum = 0.0;
-    const double *a_row = &A[static_cast<size_t>(i) * stride];
+    const double *a_row = &a[static_cast<size_t>(i) * stride];
     for (int j = 0; j < n; ++j) {
       sum += a_row[j] * v[j];
     }
@@ -44,7 +44,7 @@ void UpdateResidual(std::vector<double> &r, const std::vector<double> &ap, doubl
 
 void UpdateSearchDirection(std::vector<double> &p, const std::vector<double> &r, double beta, int n) {
   for (int i = 0; i < n; ++i) {
-    p[i] = r[i] + beta * p[i];
+    p[i] = r[i] + (beta * p[i]);
   }
 }
 }  // namespace

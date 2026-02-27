@@ -21,9 +21,9 @@ LinSystemData CreateIdentitySystem(int n, size_t n_squared) {
   data.n = n;
   data.epsilon = 1e-10;
   data.A.assign(n_squared, 0.0);
-  const size_t stride = static_cast<size_t>(n);
+  const auto stride = static_cast<size_t>(n);
   for (int i = 0; i < n; ++i) {
-    data.A[static_cast<size_t>(i) * stride + i] = 1.0;
+    data.A[(static_cast<size_t>(i) * stride) + i] = 1.0;
   }
   data.b.assign(static_cast<size_t>(n), 1.0);
   return data;
@@ -34,9 +34,9 @@ LinSystemData CreateDiagonalSystem(int n, size_t n_squared) {
   data.n = n;
   data.epsilon = 1e-10;
   data.A.assign(n_squared, 0.0);
-  const size_t stride = static_cast<size_t>(n);
+  const auto stride = static_cast<size_t>(n);
   for (int i = 0; i < n; ++i) {
-    data.A[static_cast<size_t>(i) * stride + i] = static_cast<double>(i + 1);
+    data.A[(static_cast<size_t>(i) * stride) + i] = static_cast<double>(i + 1);
   }
   data.b.assign(static_cast<size_t>(n), 1.0);
   return data;
@@ -47,14 +47,14 @@ LinSystemData CreateTridiagonalSystem(int n, size_t n_squared) {
   data.n = n;
   data.epsilon = 1e-10;
   data.A.assign(n_squared, 0.0);
-  const size_t stride = static_cast<size_t>(n);
+  const auto stride = static_cast<size_t>(n);
   for (int i = 0; i < n; ++i) {
-    data.A[static_cast<size_t>(i) * stride + i] = 2.0;
+    data.A[(static_cast<size_t>(i) * stride) + i] = 2.0;
     if (i > 0) {
-      data.A[static_cast<size_t>(i) * stride + (i - 1)] = -1.0;
+      data.A[(static_cast<size_t>(i) * stride) + (i - 1)] = -1.0;
     }
     if (i < n - 1) {
-      data.A[static_cast<size_t>(i) * stride + (i + 1)] = -1.0;
+      data.A[(static_cast<size_t>(i) * stride) + (i + 1)] = -1.0;
     }
   }
   data.b.resize(static_cast<size_t>(n));
@@ -79,14 +79,14 @@ LinSystemData CreateRandomSPDSystem(int n, size_t n_squared) {
   }
 
   data.A.assign(n_squared, 0.0);
-  const size_t stride = static_cast<size_t>(n);
+  const auto stride = static_cast<size_t>(n);
   for (int i = 0; i < n; ++i) {
     for (int j = 0; j < n; ++j) {
       double sum = 0.0;
       for (int k = 0; k < n; ++k) {
-        sum += m[static_cast<size_t>(i) * stride + k] * m[static_cast<size_t>(j) * stride + k];
+        sum += m[(static_cast<size_t>(i) * stride) + k] * m[(static_cast<size_t>(j) * stride) + k];
       }
-      data.A[static_cast<size_t>(i) * stride + j] = sum + n;
+      data.A[(static_cast<size_t>(i) * stride) + j] = sum + n;
     }
   }
 
@@ -103,13 +103,14 @@ LinSystemData CreateTestSystem(int n, const std::string &type) {
 
   if (type == "identity") {
     return CreateIdentitySystem(n, n_squared);
-  } else if (type == "diagonal") {
-    return CreateDiagonalSystem(n, n_squared);
-  } else if (type == "tridiagonal") {
-    return CreateTridiagonalSystem(n, n_squared);
-  } else {
-    return CreateRandomSPDSystem(n, n_squared);
   }
+  if (type == "diagonal") {
+    return CreateDiagonalSystem(n, n_squared);
+  }
+  if (type == "tridiagonal") {
+    return CreateTridiagonalSystem(n, n_squared);
+  }
+  return CreateRandomSPDSystem(n, n_squared);
 }
 
 }  // namespace
@@ -135,11 +136,11 @@ class KichanovaKRunFuncTestsThreads : public ppc::util::BaseRunFuncTests<LinSyst
     }
 
     double residual_norm = 0.0;
-    const size_t stride = static_cast<size_t>(input_data_.n);
+    const auto stride = static_cast<size_t>(input_data_.n);
     for (int i = 0; i < input_data_.n; ++i) {
       double sum = 0.0;
       for (int j = 0; j < input_data_.n; ++j) {
-        const size_t pos = static_cast<size_t>(i) * stride + j;
+        const size_t pos = (static_cast<size_t>(i) * stride) + j;
         sum += input_data_.A[pos] * output_data[j];
       }
       double diff = sum - input_data_.b[i];
