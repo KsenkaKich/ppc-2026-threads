@@ -4,6 +4,8 @@
 #include <utility>
 #include <vector>
 
+#include "remizov_k_dense_matrix_multiplication_cannon_algorithm/common/include/common.hpp"
+
 namespace remizov_k_dense_matrix_multiplication_cannon_algorithm {
 
 RemizovKDenseMatrixMultiplicationCannonAlgorithm::RemizovKDenseMatrixMultiplicationCannonAlgorithm(const InType &in) {

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <functional>
 #include <vector>
 
 #include "remizov_k_dense_matrix_multiplication_cannon_algorithm/common/include/common.hpp"
