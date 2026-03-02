@@ -1,12 +1,12 @@
 #include "nikolaev_d_block_linear_image_filtering_seq/seq/include/ops_seq.hpp"
 
 #include <algorithm>
-#include <vector>
 #include <array>
+#include <cstddef>
 #include <cstdint>
+#include <vector>
 
 #include "nikolaev_d_block_linear_image_filtering_seq/common/include/common.hpp"
-#include "util/include/util.hpp"
 
 namespace nikolaev_d_block_linear_image_filtering {
 
@@ -28,42 +28,38 @@ bool NikolaevDBlockLinearImageFilteringSEQ::PreProcessingImpl() {
   return true;
 }
 
-std::uint8_t NikolaevDBlockLinearImageFilteringSEQ::GetPixel(const std::vector<uint8_t>& data, int w, int h, int x, int y, int ch) {
-    int ix = std::clamp(x, 0, w - 1);
-    int iy = std::clamp(y, 0, h - 1);
-    return data[(iy * w + ix) * 3 + ch];
+std::uint8_t NikolaevDBlockLinearImageFilteringSEQ::GetPixel(const std::vector<uint8_t> &data, int w, int h, int nx,
+                                                             int ny, int ch) {
+  int ix = std::clamp(nx, 0, w - 1);
+  int iy = std::clamp(ny, 0, h - 1);
+  return data[((iy * w + ix) * 3) + ch];
 }
 
 bool NikolaevDBlockLinearImageFilteringSEQ::RunImpl() {
   const int width = std::get<0>(GetInput());
   const int height = std::get<1>(GetInput());
-  const auto& src = std::get<2>(GetInput());
-  
-  auto& dst = GetOutput();
+  const auto &src = std::get<2>(GetInput());
+
+  auto &dst = GetOutput();
   dst.assign(src.size(), 0);
 
-  const int kernel[3][3] = {
-      {1, 2, 1},
-      {2, 4, 2},
-      {1, 2, 1}
-  };
-  const int kSum = 16;
+  const std::array<std::array<int, 3>, 3> kernel = {{{1, 2, 1}, {2, 4, 2}, {1, 2, 1}}};
+  const int sum = 16;
 
-  for (int y = 0; y < height; ++y) {
-      for (int x = 0; x < width; ++x) {
-          for (int ch = 0; ch < 3; ++ch) {
-              
-              int acc = 0;
-              for (int ky = -1; ky <= 1; ++ky) {
-                  for (int kx = -1; kx <= 1; ++kx) {
-                      acc += GetPixel(src, width, height, x + kx, y + ky, ch) * kernel[ky + 1][kx + 1];
-                  }
-              }
-
-              int res = (acc + 8) / kSum;
-              dst[(y * width + x) * 3 + ch] = static_cast<uint8_t>(std::clamp(res, 0, 255));
+  for (int ny = 0; ny < height; ++ny) {
+    for (int nx = 0; nx < width; ++nx) {
+      for (int ch = 0; ch < 3; ++ch) {
+        int acc = 0;
+        for (int ky = -1; ky <= 1; ++ky) {
+          for (int kx = -1; kx <= 1; ++kx) {
+            acc += GetPixel(src, width, height, nx + kx, ny + ky, ch) * kernel.at(ky + 1).at(kx + 1);
           }
+        }
+
+        int res = (acc + 8) / sum;
+        dst[((ny * width + nx) * 3) + ch] = static_cast<uint8_t>(std::clamp(res, 0, 255));
       }
+    }
   }
   return true;
 }
