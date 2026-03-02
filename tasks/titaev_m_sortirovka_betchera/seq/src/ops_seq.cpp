@@ -5,6 +5,8 @@
 #include <cstring>
 #include <vector>
 
+#include "titaev_m_sortirovka_betchera/common/include/common.hpp"
+
 namespace titaev_m_sortirovka_betchera {
 
 namespace {
