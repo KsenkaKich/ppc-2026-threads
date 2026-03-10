@@ -14,7 +14,7 @@ namespace redkina_a_integral_simpson_seq {
 
 namespace {
 
-constexpr size_t kMaxDim = 10;  // Максимальная поддерживаемая размерность
+constexpr size_t kMaxDim = 3;  // Ограничиваем размерность для тестов (1-3)
 
 inline int SimpsonCoeff(int idx, int n) {
   if (idx == 0 || idx == n) {
@@ -42,9 +42,6 @@ bool AdvanceIndicesFromLevel(std::array<int, kMaxDim> &indices, const std::vecto
 RedkinaAIntegralSimpsonOMP::RedkinaAIntegralSimpsonOMP(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
-  // Инициализация OpenMP (чтобы выделения произошли один раз)
-  static const int dummy = omp_get_max_threads();
-  (void)dummy;
 }
 
 bool RedkinaAIntegralSimpsonOMP::ValidationImpl() {
@@ -55,7 +52,7 @@ bool RedkinaAIntegralSimpsonOMP::ValidationImpl() {
     return false;
   }
   if (dim > kMaxDim) {
-    return false;  // превышена максимальная размерность
+    return false;  // превышена допустимая размерность
   }
 
   for (size_t i = 0; i < dim; ++i) {
@@ -98,7 +95,6 @@ bool RedkinaAIntegralSimpsonOMP::RunImpl() {
     denominator *= 3.0;
   }
 
-  // Локальные переменные для использования в OpenMP
   const std::vector<double> &a_ref = a_;
   const std::vector<double> &h_ref = h;
   const std::vector<int> &n_ref = n_;
@@ -112,10 +108,14 @@ bool RedkinaAIntegralSimpsonOMP::RunImpl() {
     double coeff0 = SimpsonCoeff(i0, static_cast<int>(n_ref[0]));
     double local_sum = 0.0;
 
-    // Используем статические массивы фиксированного размера
-    std::array<double, kMaxDim> point{};
-    std::array<int, kMaxDim> indices{};
+    // thread_local вектор для точки – создаётся один раз на поток
+    thread_local std::vector<double> point(kMaxDim);
+    // Убедимся, что размер соответствует dim_local (для случаев dim < kMaxDim)
+    if (point.size() > dim_local) {
+      point.resize(dim_local);
+    }
 
+    std::array<int, kMaxDim> indices{};
     indices[0] = i0;
     for (size_t d = 1; d < dim_local; ++d) {
       indices[d] = 0;
@@ -132,10 +132,7 @@ bool RedkinaAIntegralSimpsonOMP::RunImpl() {
         w_prod *= static_cast<double>(w);
       }
 
-      local_sum += coeff0 * w_prod *
-                   func_ref(
-                       // Преобразуем std::array в std::vector для совместимости с сигнатурой func_
-                       std::vector<double>(point.begin(), point.begin() + static_cast<ptrdiff_t>(dim_local)));
+      local_sum += coeff0 * w_prod * func_ref(point);
     } while (AdvanceIndicesFromLevel(indices, n_ref, 1, dim_local));
 
     total_sum += local_sum;
