@@ -103,28 +103,29 @@ bool RedkinaAIntegralSimpsonOMP::RunImpl() {
     double coeff0 = SimpsonCoeff(i0, static_cast<int>(n_ref[0]));
     double local_sum = 0.0;
 
-    std::vector<double> point(dim_local);
-    std::vector<int> indices(dim_local);
-    indices[0] = i0;
-    for (size_t d = 1; d < dim_local; ++d) {
-      indices[d] = 0;
-    }
-
-    do {
-      // Координата первого измерения
-      point[0] = a_ref[0] + static_cast<double>(i0) * h_ref[0];
-
-      double w_prod = 1.0;
-      // Остальные измерения
+    // Защита от возможного нулевого размера (хотя dim всегда > 0)
+    if (dim_local > 0) {
+      std::vector<double> point(dim_local);
+      std::vector<int> indices(dim_local);
+      indices[0] = i0;
       for (size_t d = 1; d < dim_local; ++d) {
-        int idx = indices[d];
-        point[d] = a_ref[d] + static_cast<double>(idx) * h_ref[d];
-        int w = SimpsonCoeff(idx, static_cast<int>(n_ref[d]));
-        w_prod *= static_cast<double>(w);
+        indices[d] = 0;
       }
 
-      local_sum += coeff0 * w_prod * func_ref(point);
-    } while (AdvanceIndicesFromLevel(indices, n_ref, 1));
+      do {
+        point[0] = a_ref[0] + static_cast<double>(i0) * h_ref[0];
+
+        double w_prod = 1.0;
+        for (size_t d = 1; d < dim_local; ++d) {
+          int idx = indices[d];
+          point[d] = a_ref[d] + static_cast<double>(idx) * h_ref[d];
+          int w = SimpsonCoeff(idx, static_cast<int>(n_ref[d]));
+          w_prod *= static_cast<double>(w);
+        }
+
+        local_sum += coeff0 * w_prod * func_ref(point);
+      } while (AdvanceIndicesFromLevel(indices, n_ref, 1));
+    }
 
     total_sum += local_sum;
   }
