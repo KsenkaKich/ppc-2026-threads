@@ -75,9 +75,6 @@ bool RedkinaAIntegralSimpsonOMP::RunImpl() {
 
   double total_sum = 0.0;
 
-  // Не вызываем omp_set_num_threads здесь — инфраструктура сама настраивает число потоков.
-  // Это позволяет избежать дополнительных аллокаций TLS, на которые жалуется valgrind.
-
 #pragma omp parallel default(none) shared(total_nodes, h, strides, a_local, n_local, func_local, dim) \
     reduction(+ : total_sum)
   {
