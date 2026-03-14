@@ -1,11 +1,11 @@
 #include "baranov_a_mult_matrix_fox_algorithm/omp/include/ops_omp.hpp"
 
+#include <omp.h>
+
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <vector>
-
-#include <omp.h>
 
 #include "baranov_a_mult_matrix_fox_algorithm/common/include/common.hpp"
 
@@ -19,7 +19,7 @@ void ProcessBlock(const std::vector<double> &matrix_a, const std::vector<double>
       for (size_t k = k_start; k < k_end; ++k) {
         sum += matrix_a[(i * n) + k] * matrix_b[(k * n) + j];
       }
-      #pragma omp atomic
+#pragma omp atomic
       output[(i * n) + j] += sum;
     }
   }
@@ -53,7 +53,7 @@ void BaranovAMultMatrixFoxAlgorithmOMP::StandardMultiplication(size_t n) {
   const auto &[matrix_size, matrix_a, matrix_b] = GetInput();
   auto &output = GetOutput();
 
-  #pragma omp parallel for collapse(2)
+#pragma omp parallel for collapse(2)
   for (size_t i = 0; i < n; ++i) {
     for (size_t j = 0; j < n; ++j) {
       double sum = 0.0;
@@ -71,13 +71,13 @@ void BaranovAMultMatrixFoxAlgorithmOMP::FoxBlockMultiplication(size_t n, size_t 
 
   size_t num_blocks = (n + block_size - 1) / block_size;
 
-  #pragma omp parallel for
+#pragma omp parallel for
   for (size_t idx = 0; idx < n * n; ++idx) {
     output[idx] = 0.0;
   }
 
   for (size_t bk = 0; bk < num_blocks; ++bk) {
-    #pragma omp parallel for collapse(2)
+#pragma omp parallel for collapse(2)
     for (size_t bi = 0; bi < num_blocks; ++bi) {
       for (size_t bj = 0; bj < num_blocks; ++bj) {
         size_t broadcast_block = (bi + bk) % num_blocks;
