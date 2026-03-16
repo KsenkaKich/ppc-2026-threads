@@ -177,7 +177,7 @@ bool SmyshlaevASleCgTaskOMP::RunImpl() {
   int n_iters = static_cast<int>(n);
 
   int num_threads = ppc::util::GetNumThreads();
-  if (n < num_threads * 100) {
+  if (n_iters < num_threads * 100) {
     num_threads = 1;
   }
   if (num_threads == 1) {
