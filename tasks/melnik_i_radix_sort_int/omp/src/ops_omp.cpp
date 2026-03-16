@@ -173,28 +173,26 @@ void MelnikIRadixSortIntOMP::MergeSortedRanges(std::vector<int> &data, std::vect
   std::vector<int> *source = &data;
   std::vector<int> *destination = &buffer;
   std::vector<Range> current_ranges = ranges;
-  const int num_threads = std::max(1, ppc::util::GetNumThreads());
 
   while (current_ranges.size() > 1U) {
     const std::size_t merged_count = (current_ranges.size() + 1U) / 2U;
     std::vector<Range> next_ranges(merged_count);
 
-#pragma omp parallel for schedule(static) num_threads(num_threads)
-    for (int pair_index = 0; pair_index < static_cast<int>(merged_count); ++pair_index) {
-      const std::size_t left_pos = static_cast<std::size_t>(pair_index) * 2U;
+    for (std::size_t pair_index = 0; pair_index < merged_count; ++pair_index) {
+      const std::size_t left_pos = pair_index * 2U;
       const Range left = current_ranges[left_pos];
 
       if (left_pos + 1U >= current_ranges.size()) {
         std::copy(source->begin() + static_cast<ptrdiff_t>(left.begin),
                   source->begin() + static_cast<ptrdiff_t>(left.end),
                   destination->begin() + static_cast<ptrdiff_t>(left.begin));
-        next_ranges[static_cast<std::size_t>(pair_index)] = left;
+        next_ranges[pair_index] = left;
         continue;
       }
 
       const Range right = current_ranges[left_pos + 1U];
       MergeRanges(*source, *destination, left, right, left.begin);
-      next_ranges[static_cast<std::size_t>(pair_index)] = Range{left.begin, right.end};
+      next_ranges[pair_index] = Range{left.begin, right.end};
     }
 
     current_ranges = std::move(next_ranges);
