@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "boltenkov_s_gaussian_kernel/common/include/common.hpp"
-#include "util/src/util.cpp"
+#include "util/include/util.hpp"
 
 namespace boltenkov_s_gaussian_kernel {
 
