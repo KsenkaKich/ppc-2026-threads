@@ -56,8 +56,8 @@ double KiselevITestTaskOMP::ComputeIntegral(const std::vector<int> &steps) {
 #pragma omp parallel for reduction(+ : result) default(none) shared(nx, ny, hx, hy, x0, y0, func_type)
   for (int i = 0; i <= nx; i++) {
     for (int j = 0; j <= ny; j++) {
-      const double x = x0 + i * hx;
-      const double y = y0 + j * hy;
+      const double x = x0 + (i * hx);
+      const double y = y0 + (j * hy);
 
       const double wx = (i == 0 || i == nx) ? 0.5 : 1.0;
       const double wy = (j == 0 || j == ny) ? 0.5 : 1.0;
