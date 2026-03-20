@@ -4,8 +4,8 @@
 
 #include <algorithm>
 #include <cstddef>
-#include <vector>
 #include <ranges>
+#include <vector>
 
 #include "chetverikova_e_shell_sort_simple_merge/common/include/common.hpp"
 
