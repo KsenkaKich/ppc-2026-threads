@@ -51,7 +51,7 @@ const std::array<TestType, 12> kTestParam = {1, 2, 15, 20, 30, 40, 50, 60, 70, 8
 
 const auto kTestTasksList =
     std::tuple_cat(ppc::util::AddFuncTask<MityaevaRadixSeq, InType>(kTestParam, PPC_SETTINGS_mityaeva_radix),
-                   ppc::util::AddFuncTask<MityaevaRadixTbb, InType>(kTestParam, PPC_SETTINGS_mityaeva_radix));
+                   ppc::util::AddFuncTask<MityaevaRadixTbb, InType>(kTestParam, PPC_SETTINGS_mityaeva_radix),
                    ppc::util::AddFuncTask<MityaevaRadixOmp, InType>(kTestParam, PPC_SETTINGS_mityaeva_radix));
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
