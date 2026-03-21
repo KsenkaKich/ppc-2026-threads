@@ -113,10 +113,10 @@ std::vector<int> MakeRowStarts(int rows, int num_threads) {
   return row_starts;
 }
 
-void ParallelLabelStrips(const InType &input, int rows, int cols, int num_threads, const std::vector<int> &row_starts,
+void ParallelLabelStrips(const InType &input, int cols, int num_threads, const std::vector<int> &row_starts,
                          std::vector<std::vector<int>> &local_planes, std::vector<int> &labels_used) {
 #pragma omp parallel num_threads(num_threads) default(none) \
-    shared(input, local_planes, labels_used, row_starts, rows, cols, num_threads)
+    shared(input, local_planes, labels_used, row_starts, cols, num_threads)
   {
     const int tid = omp_get_thread_num();
     const int r_begin = row_starts[static_cast<std::size_t>(tid)];
@@ -264,7 +264,7 @@ bool GaivoronskiyMMarkingBinaryComponentsOMP::RunImpl() {
                                              std::vector<int>(static_cast<std::size_t>(cells), 0));
   std::vector<int> labels_used(static_cast<std::size_t>(num_threads), 0);
 
-  ParallelLabelStrips(input, rows, cols, num_threads, row_starts, local_planes, labels_used);
+  ParallelLabelStrips(input, cols, num_threads, row_starts, local_planes, labels_used);
 
   const auto [base, max_global_before_merge] = BuildLabelBases(labels_used, num_threads);
   if (max_global_before_merge == 0) {
