@@ -101,7 +101,7 @@ bool FrolovaSRadixSortDoubleOMP::RunImpl() {
         }
       }
 
-      std::ranges::reverse(negative);
+      std::reverse(negative.begin(), negative.end());
 
       size_t pos = offset;
       for (double val : negative) {
