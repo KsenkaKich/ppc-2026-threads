@@ -63,7 +63,7 @@ bool RychkovaGaussOMP::RunImpl() {
   const auto height = image.size();  // сайз от имаге хранит количествo строк
   GetOutput() = Image(height, std::vector<Pixel>(width, Pixel(0, 0, 0)));
   auto &output = GetOutput();
-#pragma omp parallel shared(width, height, image, output) default(none) num_threads(ppc::util::GetNumThreads())
+#pragma omp parallel for shared(width, height, image, output) default(none) num_threads(ppc::util::GetNumThreads())
   for (std::size_t j = 0; j < height; j++) {
     for (std::size_t i = 0; i < width; i++) {
       output[j][i] = ComputePixel(image, i, j, width, height);
