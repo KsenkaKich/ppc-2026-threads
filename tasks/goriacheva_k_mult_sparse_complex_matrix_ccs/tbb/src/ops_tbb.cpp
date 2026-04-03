@@ -58,8 +58,7 @@ void ProcessColumn(int j, const SparseMatrixCCS &a, const SparseMatrixCCS &b, st
     }
   }
 
-  // std::ranges::sort(used_rows);
-  std::sort(used_rows.begin(), used_rows.end());
+  std::ranges::sort(used_rows);
 
   for (int r : used_rows) {
     if (accumulator[r] != Complex(0.0, 0.0)) {
