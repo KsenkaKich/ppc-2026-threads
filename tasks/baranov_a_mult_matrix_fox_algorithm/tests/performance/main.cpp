@@ -12,7 +12,7 @@
 
 namespace baranov_a_mult_matrix_fox_algorithm_test {
 
-template<typename TaskType>
+template <typename TaskType>
 class BaranovAMultMatrixFoxAlgorithmPerfTests
     : public ppc::util::BaseRunPerfTests<baranov_a_mult_matrix_fox_algorithm::InType,
                                          baranov_a_mult_matrix_fox_algorithm::OutType> {
@@ -52,8 +52,10 @@ class BaranovAMultMatrixFoxAlgorithmPerfTests
   baranov_a_mult_matrix_fox_algorithm::OutType expected_output_;
 };
 
-using BaranovASEQPerfTests = BaranovAMultMatrixFoxAlgorithmPerfTests<baranov_a_mult_matrix_fox_algorithm_seq::BaranovAMultMatrixFoxAlgorithmSEQ>;
-using BaranovAOMPPerfTests = BaranovAMultMatrixFoxAlgorithmPerfTests<baranov_a_mult_matrix_fox_algorithm_omp::BaranovAMultMatrixFoxAlgorithmOMP>;
+using BaranovASEQPerfTests =
+    BaranovAMultMatrixFoxAlgorithmPerfTests<baranov_a_mult_matrix_fox_algorithm_seq::BaranovAMultMatrixFoxAlgorithmSEQ>;
+using BaranovAOMPPerfTests =
+    BaranovAMultMatrixFoxAlgorithmPerfTests<baranov_a_mult_matrix_fox_algorithm_omp::BaranovAMultMatrixFoxAlgorithmOMP>;
 
 TEST_P(BaranovASEQPerfTests, RunPerfModes) {
   ExecuteTest(GetParam());
@@ -66,12 +68,12 @@ TEST_P(BaranovAOMPPerfTests, RunPerfModes) {
 namespace {
 
 const auto kAllPerfTasksSeq =
-    ppc::util::MakeAllPerfTasks<baranov_a_mult_matrix_fox_algorithm::InType, 
+    ppc::util::MakeAllPerfTasks<baranov_a_mult_matrix_fox_algorithm::InType,
                                 baranov_a_mult_matrix_fox_algorithm_seq::BaranovAMultMatrixFoxAlgorithmSEQ>(
         PPC_SETTINGS_baranov_a_mult_matrix_fox_algorithm);
 
 const auto kAllPerfTasksOmp =
-    ppc::util::MakeAllPerfTasks<baranov_a_mult_matrix_fox_algorithm::InType, 
+    ppc::util::MakeAllPerfTasks<baranov_a_mult_matrix_fox_algorithm::InType,
                                 baranov_a_mult_matrix_fox_algorithm_omp::BaranovAMultMatrixFoxAlgorithmOMP>(
         PPC_SETTINGS_baranov_a_mult_matrix_fox_algorithm);
 
