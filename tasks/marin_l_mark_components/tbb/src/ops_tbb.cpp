@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "marin_l_mark_components/common/include/common.hpp"
+
 #include "oneapi/tbb/blocked_range.h"
 #include "oneapi/tbb/parallel_for.h"
 #include "oneapi/tbb/task_arena.h"
