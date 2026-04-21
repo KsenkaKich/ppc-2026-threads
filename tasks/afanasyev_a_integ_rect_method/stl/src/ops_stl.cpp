@@ -1,6 +1,7 @@
 #include "afanasyev_a_integ_rect_method/stl/include/ops_stl.hpp"
 
 #include <cmath>
+#include <functional>
 #include <numeric>
 #include <thread>
 #include <vector>
@@ -72,9 +73,9 @@ bool AfanasyevAIntegRectMethodSTL::RunImpl() {
   int remainder = n % num_threads;
 
   int start = 0;
-  for (int t = 0; t < num_threads; ++t) {
-    int end = start + chunk_size + (t < remainder ? 1 : 0);
-    threads.emplace_back(ComputePartialSum, start, end, n, k_dim, h, std::ref(partial_sums[t]));
+  for (int thread_id = 0; thread_id < num_threads; ++thread_id) {
+    int end = start + chunk_size + (thread_id < remainder ? 1 : 0);
+    threads.emplace_back(ComputePartialSum, start, end, n, k_dim, h, std::ref(partial_sums[thread_id]));
     start = end;
   }
 
