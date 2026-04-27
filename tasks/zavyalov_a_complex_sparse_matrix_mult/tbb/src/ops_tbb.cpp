@@ -1,16 +1,16 @@
 #include "zavyalov_a_complex_sparse_matrix_mult/tbb/include/ops_tbb.hpp"
-#include "zavyalov_a_complex_sparse_matrix_mult/common/include/common.hpp"
 
 #include <tbb/tbb.h>
 
-#include <atomic>
-#include <numeric>
-#include <util/include/util.hpp>
+#include <cstddef>
+#include <map>
+#include <stdexcept>
+#include <utility>
 #include <vector>
 
-#include "oneapi/tbb/parallel_for.h"
+#include "zavyalov_a_complex_sparse_matrix_mult/common/include/common.hpp"
 
-namespace zavyalov_a_compl_sparse_matr_mult  {
+namespace zavyalov_a_compl_sparse_matr_mult {
 
 SparseMatrix ZavyalovAComplSparseMatrMultTBB::MultiplicateWithTbb(const SparseMatrix &matr_a,
                                                                   const SparseMatrix &matr_b) {
@@ -20,8 +20,8 @@ SparseMatrix ZavyalovAComplSparseMatrMultTBB::MultiplicateWithTbb(const SparseMa
 
   tbb::enumerable_thread_specific<std::map<std::pair<size_t, size_t>, Complex>> local_maps;
 
-  tbb::parallel_for(tbb::blocked_range<size_t>(0, matr_a.Count()), [&](const tbb::blocked_range<size_t>& range) { 
-    auto& my_map = local_maps.local();
+  tbb::parallel_for(tbb::blocked_range<size_t>(0, matr_a.Count()), [&](const tbb::blocked_range<size_t> &range) {
+    auto &my_map = local_maps.local();
     for (size_t i = range.begin(); i != range.end(); ++i) {
       size_t row_a = matr_a.row_ind[i];
       size_t col_a = matr_a.col_ind[i];
@@ -33,8 +33,7 @@ SparseMatrix ZavyalovAComplSparseMatrMultTBB::MultiplicateWithTbb(const SparseMa
         }
       }
     }
-   });
-
+  });
 
   std::map<std::pair<size_t, size_t>, Complex> mp;
   for (auto &lm : local_maps) {
@@ -71,15 +70,11 @@ bool ZavyalovAComplSparseMatrMultTBB::PreProcessingImpl() {
 }
 
 bool ZavyalovAComplSparseMatrMultTBB::RunImpl() {
-
-  //std::atomic<int> counter(0);
-  //tbb::parallel_for(0, ppc::util::GetNumThreads(), [&](int /*i*/) { counter++; });
-
   const auto &matr_a = std::get<0>(GetInput());
   const auto &matr_b = std::get<1>(GetInput());
 
   GetOutput() = MultiplicateWithTbb(matr_a, matr_b);
-  
+
   return true;
 }
 
@@ -87,4 +82,4 @@ bool ZavyalovAComplSparseMatrMultTBB::PostProcessingImpl() {
   return true;
 }
 
-}  // namespace zavyalov_a_compl_sparse_matr_mult 
+}  // namespace zavyalov_a_compl_sparse_matr_mult

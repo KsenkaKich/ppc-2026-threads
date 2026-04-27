@@ -145,6 +145,8 @@ const std::array<TestType, 10> kTestParam = {
 const auto kTestTasksList = std::tuple_cat(ppc::util::AddFuncTask<ZavyalovAComplSparseMatrMultSEQ, InType>(
                                                kTestParam, PPC_SETTINGS_zavyalov_a_complex_sparse_matrix_mult),
                                            ppc::util::AddFuncTask<ZavyalovAComplSparseMatrMultOMP, InType>(
+                                               kTestParam, PPC_SETTINGS_zavyalov_a_complex_sparse_matrix_mult),
+                                           ppc::util::AddFuncTask<ZavyalovAComplSparseMatrMultTBB, InType>(
                                                kTestParam, PPC_SETTINGS_zavyalov_a_complex_sparse_matrix_mult));
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);

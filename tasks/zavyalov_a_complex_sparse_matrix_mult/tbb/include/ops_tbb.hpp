@@ -1,9 +1,9 @@
 #pragma once
 
-#include "zavyalov_a_complex_sparse_matrix_mult/common/include/common.hpp"
 #include "task/include/task.hpp"
+#include "zavyalov_a_complex_sparse_matrix_mult/common/include/common.hpp"
 
-namespace zavyalov_a_compl_sparse_matr_mult  {
+namespace zavyalov_a_compl_sparse_matr_mult {  // comm for retrigerring CI
 
 class ZavyalovAComplSparseMatrMultTBB : public BaseTask {
  public:
@@ -20,4 +20,4 @@ class ZavyalovAComplSparseMatrMultTBB : public BaseTask {
   static SparseMatrix MultiplicateWithTbb(const SparseMatrix &matr_a, const SparseMatrix &matr_b);
 };
 
-}  // namespace zavyalov_a_compl_sparse_matr_mult 
+}  // namespace zavyalov_a_compl_sparse_matr_mult
