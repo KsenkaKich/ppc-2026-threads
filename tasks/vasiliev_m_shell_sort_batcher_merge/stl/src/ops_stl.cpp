@@ -132,22 +132,7 @@ void VasilievMShellSortBatcherMergeSTL::CycleMerge(std::vector<ValType> &vec, st
         const size_t start = bounds[l];
         const size_t middle = bounds[mid];
         const size_t end_pos = bounds[r];
-
-        if (mid == r) {
-          std::copy(vec.begin() + static_cast<std::ptrdiff_t>(start),
-                    vec.begin() + static_cast<std::ptrdiff_t>(end_pos),
-                    buffer.begin() + static_cast<std::ptrdiff_t>(start));
-        } else {
-          std::vector<ValType> l_vect(vec.begin() + static_cast<std::ptrdiff_t>(start),
-                                      vec.begin() + static_cast<std::ptrdiff_t>(middle));
-          std::vector<ValType> r_vect(vec.begin() + static_cast<std::ptrdiff_t>(middle),
-                                      vec.begin() + static_cast<std::ptrdiff_t>(end_pos));
-
-          std::vector<ValType> merged = BatcherMerge(l_vect, r_vect);
-          for (size_t i = 0; i < merged.size(); i++) {
-            buffer[start + i] = merged[i];
-          }
-        }
+        MergeChunks(vec, buffer, start, middle, end_pos);
       }
     });
   }
@@ -241,6 +226,24 @@ void VasilievMShellSortBatcherMergeSTL::ShellSortChunk(std::vector<ValType> &vec
       }
       vec[j] = tmp;
     }
+  }
+}
+
+void VasilievMShellSortBatcherMergeSTL::MergeChunks(std::vector<ValType> &vec, std::vector<ValType> &buffer,
+                                                    size_t start, size_t middle, size_t end_pos) {
+  if (middle == end_pos) {
+    std::copy(vec.begin() + static_cast<std::ptrdiff_t>(start), vec.begin() + static_cast<std::ptrdiff_t>(end_pos),
+              buffer.begin() + static_cast<std::ptrdiff_t>(start));
+    return;
+  }
+  std::vector<ValType> l_vect(vec.begin() + static_cast<std::ptrdiff_t>(start),
+                              vec.begin() + static_cast<std::ptrdiff_t>(middle));
+  std::vector<ValType> r_vect(vec.begin() + static_cast<std::ptrdiff_t>(middle),
+                              vec.begin() + static_cast<std::ptrdiff_t>(end_pos));
+
+  std::vector<ValType> merged = BatcherMerge(l_vect, r_vect);
+  for (size_t i = 0; i < merged.size(); i++) {
+    buffer[start + i] = merged[i];
   }
 }
 
