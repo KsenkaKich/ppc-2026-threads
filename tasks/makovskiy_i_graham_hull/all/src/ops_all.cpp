@@ -34,13 +34,7 @@ bool IsBetterMin(const Point &candidate, const Point &current_min) {
 
 size_t FindMinPointIndexSTL(const std::vector<Point> &points) {
   const size_t n = points.size();
-  int num_threads = ppc::util::GetNumThreads();
-  if (num_threads <= 0) {
-    num_threads = 4;
-  }
-  if (n < 1000) {
-    num_threads = 1;
-  }
+  const int num_threads = std::max(1, ppc::util::GetNumThreads());
 
   std::vector<std::future<size_t>> futures;
   const size_t chunk = (n + static_cast<size_t>(num_threads) - 1) / static_cast<size_t>(num_threads);
@@ -77,7 +71,7 @@ size_t FindMinPointIndexSTL(const std::vector<Point> &points) {
 
 template <typename RandomIt, typename Compare>
 void StlParallelSortSub(RandomIt first, RandomIt last, Compare comp) {
-  if (last - first < 2048) {
+  if (last - first < 32) {
     std::sort(first, last, comp);
     return;
   }
@@ -92,7 +86,7 @@ void StlParallelSortSub(RandomIt first, RandomIt last, Compare comp) {
 
 template <typename RandomIt, typename Compare>
 void StlParallelSort(RandomIt first, RandomIt last, Compare comp) {
-  if (last - first < 2048) {
+  if (last - first < 32) {
     std::sort(first, last, comp);
     return;
   }
@@ -107,20 +101,12 @@ void StlParallelSort(RandomIt first, RandomIt last, Compare comp) {
 
 std::vector<Point> FilterPointsSTL(const std::vector<Point> &points, const Point &p0) {
   const size_t n = points.size();
-
   if (n <= 2) {
     return points;
   }
 
   std::vector<uint8_t> keep(n, 1);
-  int num_threads = ppc::util::GetNumThreads();
-
-  if (num_threads <= 0) {
-    num_threads = 4;
-  }
-  if (n < 1000) {
-    num_threads = 1;
-  }
+  const int num_threads = std::max(1, ppc::util::GetNumThreads());
 
   const size_t num_elements = n - 2;
   const size_t chunk = (num_elements + static_cast<size_t>(num_threads) - 1) / static_cast<size_t>(num_threads);
@@ -216,11 +202,8 @@ std::vector<Point> ReceivePointsWorker() {
 }
 
 std::vector<Point> SendPointsRoot(int size, const std::vector<Point> &input_points) {
-  if (size <= 1) {
-    return input_points;
-  }
-
   const int num_points = static_cast<int>(input_points.size());
+
   const int chunk = num_points / size;
   const int rem = num_points % size;
 
@@ -248,10 +231,6 @@ std::vector<Point> ScatterPoints(int rank, int size, const std::vector<Point> &i
 }
 
 std::vector<Point> GatherHulls(int rank, int size, const std::vector<Point> &local_hull) {
-  if (size <= 1) {
-    return local_hull;
-  }
-
   int local_hull_size = static_cast<int>(local_hull.size());
   std::vector<int> hull_sizes(static_cast<size_t>(size), 0);
 
@@ -314,11 +293,7 @@ bool ConvexHullGrahamALL::RunImpl() {
   std::vector<Point> all_hulls = GatherHulls(rank, size, local_hull);
 
   if (rank == 0) {
-    if (size > 1) {
-      GetOutput() = ComputeHullSTL(all_hulls);
-    } else {
-      GetOutput() = all_hulls;
-    }
+    GetOutput() = ComputeHullSTL(all_hulls);
   }
 
   return true;
