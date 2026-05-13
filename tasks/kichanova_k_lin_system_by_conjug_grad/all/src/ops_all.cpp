@@ -8,6 +8,8 @@
 #include <numeric>
 #include <vector>
 
+#include "kichanova_k_lin_system_by_conjug_grad/common/include/common.hpp"
+
 namespace kichanova_k_lin_system_by_conjug_grad {
 
 namespace {
