@@ -18,14 +18,30 @@ double DotProductHybrid(const std::vector<double> &a, const std::vector<double> 
     return 0.0;
   }
 
-  return tbb::parallel_reduce(tbb::blocked_range<int>(0, n, 1024), 0.0,
-                              [&](const tbb::blocked_range<int> &range, double local_sum) {
-#pragma omp simd reduction(+ : local_sum)
-    for (int i = range.begin(); i < range.end(); ++i) {
-      local_sum += a[i] * b[i];
+  double result = 0.0;
+  const int num_threads = omp_get_max_threads();
+
+#pragma omp parallel for reduction(+ : result) schedule(static)
+  for (int t = 0; t < num_threads; ++t) {
+    int start = t * (n / num_threads);
+    int end = (t == num_threads - 1) ? n : (t + 1) * (n / num_threads);
+
+    if (start >= end) {
+      continue;
     }
-    return local_sum;
-  }, [](double x, double y) { return x + y; });
+
+    double local_sum = tbb::parallel_reduce(tbb::blocked_range<int>(start, end, 256), 0.0,
+                                            [&](const tbb::blocked_range<int> &range, double sum) {
+      for (int i = range.begin(); i < range.end(); ++i) {
+        sum += a[i] * b[i];
+      }
+      return sum;
+    }, [](double x, double y) { return x + y; });
+
+    result += local_sum;
+  }
+
+  return result;
 }
 
 void MatrixVectorProductHybrid(const std::vector<double> &a, const std::vector<double> &v, std::vector<double> &result,
@@ -35,29 +51,41 @@ void MatrixVectorProductHybrid(const std::vector<double> &a, const std::vector<d
   }
 
   const auto stride = static_cast<size_t>(n);
+  const double *v_ptr = v.data();
+  const int num_threads = omp_get_max_threads();
 
-  tbb::parallel_for(tbb::blocked_range<int>(0, n, 64), [&](const tbb::blocked_range<int> &range) {
-    for (int i = range.begin(); i < range.end(); ++i) {
-      const double *row = &a[i * stride];
-      double sum = 0.0;
+#pragma omp parallel for schedule(dynamic, 1)
+  for (int t = 0; t < num_threads; ++t) {
+    int start = t * (n / num_threads);
+    int end = (t == num_threads - 1) ? n : (t + 1) * (n / num_threads);
 
-      int j = 0;
-      for (; j <= n - 8; j += 8) {
-        sum += row[j] * v[j];
-        sum += row[j + 1] * v[j + 1];
-        sum += row[j + 2] * v[j + 2];
-        sum += row[j + 3] * v[j + 3];
-        sum += row[j + 4] * v[j + 4];
-        sum += row[j + 5] * v[j + 5];
-        sum += row[j + 6] * v[j + 6];
-        sum += row[j + 7] * v[j + 7];
-      }
-      for (; j < n; ++j) {
-        sum += row[j] * v[j];
-      }
-      result[i] = sum;
+    if (start >= end) {
+      continue;
     }
-  });
+
+    tbb::parallel_for(tbb::blocked_range<int>(start, end, 32), [&](const tbb::blocked_range<int> &range) {
+      for (int i = range.begin(); i < range.end(); ++i) {
+        const double *row = &a[i * stride];
+        double sum = 0.0;
+
+        int j = 0;
+        for (; j <= n - 8; j += 8) {
+          sum += row[j] * v_ptr[j];
+          sum += row[j + 1] * v_ptr[j + 1];
+          sum += row[j + 2] * v_ptr[j + 2];
+          sum += row[j + 3] * v_ptr[j + 3];
+          sum += row[j + 4] * v_ptr[j + 4];
+          sum += row[j + 5] * v_ptr[j + 5];
+          sum += row[j + 6] * v_ptr[j + 6];
+          sum += row[j + 7] * v_ptr[j + 7];
+        }
+        for (; j < n; ++j) {
+          sum += row[j] * v_ptr[j];
+        }
+        result[i] = sum;
+      }
+    });
+  }
 }
 
 void UpdateSolutionAndResidualHybrid(std::vector<double> &x, std::vector<double> &r, const std::vector<double> &p,
@@ -66,13 +94,24 @@ void UpdateSolutionAndResidualHybrid(std::vector<double> &x, std::vector<double>
     return;
   }
 
-  tbb::parallel_for(tbb::blocked_range<int>(0, n, 1024), [&](const tbb::blocked_range<int> &range) {
-#pragma omp simd
-    for (int i = range.begin(); i < range.end(); ++i) {
-      x[i] += alpha * p[i];
-      r[i] -= alpha * ap[i];
+  const int num_threads = omp_get_max_threads();
+
+#pragma omp parallel for schedule(static)
+  for (int t = 0; t < num_threads; ++t) {
+    int start = t * (n / num_threads);
+    int end = (t == num_threads - 1) ? n : (t + 1) * (n / num_threads);
+
+    if (start >= end) {
+      continue;
     }
-  });
+
+    tbb::parallel_for(tbb::blocked_range<int>(start, end, 512), [&](const tbb::blocked_range<int> &range) {
+      for (int i = range.begin(); i < range.end(); ++i) {
+        x[i] += alpha * p[i];
+        r[i] -= alpha * ap[i];
+      }
+    });
+  }
 }
 
 void UpdateDirectionHybrid(std::vector<double> &p, const std::vector<double> &r, double beta, int n) {
@@ -80,21 +119,44 @@ void UpdateDirectionHybrid(std::vector<double> &p, const std::vector<double> &r,
     return;
   }
 
-  tbb::parallel_for(tbb::blocked_range<int>(0, n, 1024), [&](const tbb::blocked_range<int> &range) {
-#pragma omp simd
-    for (int i = range.begin(); i < range.end(); ++i) {
-      p[i] = r[i] + (beta * p[i]);
+  const int num_threads = omp_get_max_threads();
+
+#pragma omp parallel for schedule(static)
+  for (int t = 0; t < num_threads; ++t) {
+    int start = t * (n / num_threads);
+    int end = (t == num_threads - 1) ? n : (t + 1) * (n / num_threads);
+
+    if (start >= end) {
+      continue;
     }
-  });
+
+    tbb::parallel_for(tbb::blocked_range<int>(start, end, 512), [&](const tbb::blocked_range<int> &range) {
+      for (int i = range.begin(); i < range.end(); ++i) {
+        p[i] = r[i] + (beta * p[i]);
+      }
+    });
+  }
 }
 
 void InitializeVectorsHybrid(std::vector<double> &r, std::vector<double> &p, const std::vector<double> &b, int n) {
-  tbb::parallel_for(tbb::blocked_range<int>(0, n, 1024), [&](const tbb::blocked_range<int> &range) {
-    for (int i = range.begin(); i < range.end(); ++i) {
-      r[i] = b[i];
-      p[i] = r[i];
+  const int num_threads = omp_get_max_threads();
+
+#pragma omp parallel for schedule(static)
+  for (int t = 0; t < num_threads; ++t) {
+    int start = t * (n / num_threads);
+    int end = (t == num_threads - 1) ? n : (t + 1) * (n / num_threads);
+
+    if (start >= end) {
+      continue;
     }
-  });
+
+    tbb::parallel_for(tbb::blocked_range<int>(start, end, 1024), [&](const tbb::blocked_range<int> &range) {
+      for (int i = range.begin(); i < range.end(); ++i) {
+        r[i] = b[i];
+        p[i] = r[i];
+      }
+    });
+  }
 }
 
 }  // namespace
@@ -128,14 +190,14 @@ bool KichanovaKLinSystemByConjugGradALL::RunImpl() {
   const InType &input_data = GetInput();
   OutType &x = GetOutput();
 
-  int n = input_data.n;
+  const int n = input_data.n;
   if (n == 0) {
     return false;
   }
 
   const std::vector<double> &a = input_data.A;
   const std::vector<double> &b = input_data.b;
-  double epsilon = input_data.epsilon;
+  const double epsilon = input_data.epsilon;
 
   std::vector<double> r(n);
   std::vector<double> p(n);
@@ -150,27 +212,27 @@ bool KichanovaKLinSystemByConjugGradALL::RunImpl() {
     return true;
   }
 
-  int max_iter = n * 1000;
+  const int max_iter = n * 1000;
 
   for (int iter = 0; iter < max_iter; ++iter) {
     MatrixVectorProductHybrid(a, p, ap, n);
 
-    double p_ap = DotProductHybrid(p, ap, n);
+    const double p_ap = DotProductHybrid(p, ap, n);
     if (std::abs(p_ap) < 1e-30) {
       break;
     }
 
-    double alpha = rr_old / p_ap;
+    const double alpha = rr_old / p_ap;
     UpdateSolutionAndResidualHybrid(x, r, p, ap, alpha, n);
 
-    double rr_new = DotProductHybrid(r, r, n);
+    const double rr_new = DotProductHybrid(r, r, n);
     residual_norm = std::sqrt(rr_new);
 
     if (residual_norm < epsilon) {
       break;
     }
 
-    double beta = rr_new / rr_old;
+    const double beta = rr_new / rr_old;
     UpdateDirectionHybrid(p, r, beta, n);
 
     rr_old = rr_new;
