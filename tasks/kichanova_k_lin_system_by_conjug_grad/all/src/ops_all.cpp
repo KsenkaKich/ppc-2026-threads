@@ -40,7 +40,7 @@ double DotProductHybrid(const std::vector<double> &a, const std::vector<double> 
   double result = 0.0;
   int num_threads = omp_get_max_threads();
 
-#pragma omp parallel for reduction(+ : result) schedule(static)
+#pragma omp parallel for reduction(+ : result) schedule(static) default(none) shared(a, b, n, num_threads)
   for (int block = 0; block < num_threads; ++block) {
     int start = block * (n / num_threads);
     int end = (block == num_threads - 1) ? n : (block + 1) * (n / num_threads);
@@ -70,7 +70,7 @@ void MatrixVectorProductHybrid(const std::vector<double> &a, const std::vector<d
   const double *v_ptr = v.data();
   int num_threads = omp_get_max_threads();
 
-#pragma omp parallel for schedule(dynamic, 1)
+#pragma omp parallel for schedule(dynamic, 1) default(none) shared(a, result, n, stride, v_ptr, num_threads)
   for (int block = 0; block < num_threads; ++block) {
     int start = block * (n / num_threads);
     int end = (block == num_threads - 1) ? n : (block + 1) * (n / num_threads);
@@ -95,7 +95,7 @@ void UpdateSolutionAndResidualHybrid(std::vector<double> &x, std::vector<double>
 
   int num_threads = omp_get_max_threads();
 
-#pragma omp parallel for schedule(static)
+#pragma omp parallel for schedule(static) default(none) shared(x, r, p, ap, alpha, n, num_threads)
   for (int block = 0; block < num_threads; ++block) {
     int start = block * (n / num_threads);
     int end = (block == num_threads - 1) ? n : (block + 1) * (n / num_threads);
@@ -119,7 +119,7 @@ void UpdateDirectionHybrid(std::vector<double> &p, const std::vector<double> &r,
 
   int num_threads = omp_get_max_threads();
 
-#pragma omp parallel for schedule(static)
+#pragma omp parallel for schedule(static) default(none) shared(p, r, beta, n, num_threads)
   for (int block = 0; block < num_threads; ++block) {
     int start = block * (n / num_threads);
     int end = (block == num_threads - 1) ? n : (block + 1) * (n / num_threads);
@@ -129,7 +129,7 @@ void UpdateDirectionHybrid(std::vector<double> &p, const std::vector<double> &r,
 
     tbb::parallel_for(tbb::blocked_range<int>(start, end, 512), [&](const tbb::blocked_range<int> &range) {
       for (int i = range.begin(); i < range.end(); ++i) {
-        p[i] = r[i] + beta * p[i];
+        p[i] = r[i] + (beta * p[i]);
       }
     });
   }
@@ -138,7 +138,7 @@ void UpdateDirectionHybrid(std::vector<double> &p, const std::vector<double> &r,
 void InitializeVectorsHybrid(std::vector<double> &r, std::vector<double> &p, const std::vector<double> &b, int n) {
   int num_threads = omp_get_max_threads();
 
-#pragma omp parallel for schedule(static)
+#pragma omp parallel for schedule(static) default(none) shared(r, p, b, n, num_threads)
   for (int block = 0; block < num_threads; ++block) {
     int start = block * (n / num_threads);
     int end = (block == num_threads - 1) ? n : (block + 1) * (n / num_threads);
